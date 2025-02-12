@@ -33,10 +33,6 @@ interface FontStyles {
   };
 }
 
-interface ExpandableCardDemoProps {
-  fontStyles?: FontStyles;
-}
-
 const defaultFontStyles: FontStyles = {
   titleFont: {
     family: "Fredoka",
@@ -73,7 +69,12 @@ const buttonStyles = {
   hoverTextColor: "#bf2ef0",
 };
 
-export function ExpandableCardDemo({ fontStyles = defaultFontStyles }: ExpandableCardDemoProps) {
+interface ExpandableCardDemoProps {
+  fontStyles?: FontStyles;
+  onModalStateChange?: (isOpen: boolean) => void;
+}
+
+export function ExpandableCardDemo({ fontStyles = defaultFontStyles, onModalStateChange }: ExpandableCardDemoProps) {
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -83,26 +84,29 @@ export function ExpandableCardDemo({ fontStyles = defaultFontStyles }: Expandabl
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setActive(null);
+        onModalStateChange?.(false);
       }
     }
 
     if (active && typeof active === "object") {
-      document.documentElement.style.overflow = "hidden";
-
+      onModalStateChange?.(true);
       if (modalRef.current && window.innerWidth < 768) {
         modalRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    } 
-    
-    else {
-      document.body.style.overflow = "auto";
+    } else {
+      onModalStateChange?.(false);
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [active]);
+  }, [active, onModalStateChange]);
 
-  useOutsideClick(ref, () => setActive(null));
+  const handleCloseModal = () => {
+    setActive(null);
+    onModalStateChange?.(false);
+  };
+
+  useOutsideClick(ref, handleCloseModal);
 
   const getTitleStyle = () => ({
     fontFamily: fontStyles.titleFont.family,
@@ -159,7 +163,7 @@ export function ExpandableCardDemo({ fontStyles = defaultFontStyles }: Expandabl
               }}
               className="flex absolute top-4 right-15 items-center justify-center rounded-full h-12 w-12 shadow-lg z-[200]"
               style={{ backgroundColor: "#bf2ef0" }}
-              onClick={() => setActive(null)}
+              onClick={handleCloseModal}
             >
               <CloseIcon />
             </motion.button>
@@ -230,7 +234,7 @@ export function ExpandableCardDemo({ fontStyles = defaultFontStyles }: Expandabl
           <motion.div
             layoutId={`card-${card.title}-${id}`}
             key={`card-${card.title}-${id}`}
-            onClick={() => setActive(card)}
+            onClick={() => {setActive(card); onModalStateChange?.(true);}}
             className="p-4 flex flex-col sm:flex-row justify-between items-center hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer"
           >
             <div className="flex gap-4 flex-col sm:flex-row items-center sm:items-start">
