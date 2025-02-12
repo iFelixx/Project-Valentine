@@ -67,7 +67,7 @@ const StyledHeading = styled.h1`
   }
 `;
 
-const PageContainer = styled.div`
+const PageContainer = styled.div.withConfig({shouldForwardProp: (prop) => prop !== "isModalOpen"})<{ isModalOpen: boolean }>`
   position: relative;
   contain: paint;
   display: flex;
@@ -75,10 +75,16 @@ const PageContainer = styled.div`
   align-items: center;
   height: 100vh;
   width: 100vw;
-  overflow-y: auto;
   box-sizing: border-box;
-  margin-top: 5rem;
+  margin-top: 1rem;
+  overflow-y: ${props => props.isModalOpen ? 'hidden' : 'auto'};
   padding: 0;
+  
+  @media (max-width: 768px) {
+    position: ${props => props.isModalOpen ? 'fixed' : 'relative'};
+    top: 0;
+    left: 0;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -102,6 +108,7 @@ const CardSection = styled.div`
 
 export default function ContentPage() {
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -111,7 +118,7 @@ export default function ContentPage() {
 
   return (
     <BackgroundBeamsWithCollision>
-      <PageContainer>
+      <PageContainer isModalOpen={isModalOpen}>
         <div className="animate__animated animate__jackInTheBox">
               <StyledHeading>
                 <span className="favorite">Happy Valentine</span>
@@ -125,7 +132,7 @@ export default function ContentPage() {
 
         <ContentContainer>
           <ExpandableSection>
-            <ExpandableCardDemo />
+            <ExpandableCardDemo onModalStateChange={setIsModalOpen}/>
           </ExpandableSection>
               
           <CardSection>
